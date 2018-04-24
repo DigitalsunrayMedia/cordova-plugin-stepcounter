@@ -37,7 +37,6 @@ import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,18 +44,13 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static java.lang.System.currentTimeMillis;
-
 public class StepCounterService extends Service implements SensorEventListener {
 
     private final  String TAG        = "StepCounterService";
-    private IBinder mBinder = null;
     private static boolean isRunning = false;
 
     private SensorManager mSensorManager;
-    private Sensor        mStepSensor;
     private Integer       stepsCounted    = 0;
-    private Boolean       haveSetOffset   = false;
 
     public Integer getStepsCounted() {
         return stepsCounted;
@@ -70,12 +64,12 @@ public class StepCounterService extends Service implements SensorEventListener {
 
     @Override
     public IBinder onBind(Intent intent) {
-        mBinder   = new StepCounterServiceBinder();
+        IBinder mBinder = new StepCounterServiceBinder();
         Log.i(TAG, "onBind" + intent);
         return mBinder;
     }
 
-    public class StepCounterServiceBinder extends Binder {
+    class StepCounterServiceBinder extends Binder {
         StepCounterService getService() {
             // Return this instance of StepCounterService so clients can call public methods
             return StepCounterService.this;
@@ -100,8 +94,8 @@ public class StepCounterService extends Service implements SensorEventListener {
         PendingIntent stepIntent = PendingIntent.getService(getApplicationContext(), 10, newServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         //PendingIntent.GetService (ApplicationContext, 10, intent2, PendingIntentFlags.UpdateCurrent);
 
-        aManager.set(AlarmManager.RTC, java.lang.System.currentTimeMillis() + 1000 * 60 * 60, stepIntent);
-
+        if (aManager != null)
+            aManager.set(AlarmManager.RTC, System.currentTimeMillis() + 1000 * 60 * 60, stepIntent);
 
         if (isRunning /* || has no step sensors */) {
             Log.i(TAG, "Not initialising sensors");
@@ -119,10 +113,10 @@ public class StepCounterService extends Service implements SensorEventListener {
     public void doInit() {
         Log.i(TAG, "Registering STEP_DETECTOR sensor");
         stepsCounted  = 0;
-        haveSetOffset = false;
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        mStepSensor    = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        Sensor mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+
         mSensorManager.registerListener(this, mStepSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
@@ -138,19 +132,22 @@ public class StepCounterService extends Service implements SensorEventListener {
 
         Log.i(TAG, "- Relaunch service in 500ms" );
         //Autorelaunch the service
-        //@TODO should test if stopService is called from killing app or from calling stop() method in CordovaStepCounter
         Intent newServiceIntent = new Intent(this,StepCounterService.class);
         AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        aManager.set(AlarmManager.RTC, java.lang.System.currentTimeMillis() + 500, PendingIntent.getService(this,11,newServiceIntent,0));
+        if (aManager != null)
+            aManager.set(AlarmManager.RTC, System.currentTimeMillis() + 500,
+                        PendingIntent.getService(this,11,
+                        newServiceIntent,0));
 
         return super.stopService(intent);
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+
+
         //Log.i(TAG, "onSensorChanged event!");
         Integer steps = Math.round(sensorEvent.values[0]);
-
 
         Integer daySteps = 0;
         Integer dayOffset = 0;
@@ -180,36 +177,18 @@ public class StepCounterService extends Service implements SensorEventListener {
                 dayData = pData.getJSONObject(currentDateString);
                 dayOffset = dayData.getInt("offset");
                 daySteps = dayData.getInt("steps");
-                haveSetOffset = true;
 
-                //If steps is less thant dayOffset, means that dayOffset is not correct (due to reboot in the middle of the day)
-                if(steps < dayOffset){
-                    haveSetOffset = false;
-                }
             }catch(JSONException err){
                 Log.e(TAG,"Exception while getting Object from JSON for "+currentDateString);
             }
-        }else{
-            // If there is no data, we will have to save offset
-            haveSetOffset = false;
         }
-
-
 
         //Counter += 1
         stepsCounted += 1;
 
-        //If offset has not been set or if saved offset is greater than today offset
-        if (!haveSetOffset) {
-            //Change offset for current count
-            dayOffset = steps - daySteps;
-            //Add one to steps (=1 if offset not set, or +1 if steps count has been resetted by a phone restart)
-            haveSetOffset = true;
-            Log.i(TAG, "  * Updated offset: " + dayOffset);
-        }
-
         //First 'steps' is 0 an not 1
-        daySteps = (steps+1) - dayOffset;
+        daySteps += steps;
+
         //Log all this
         Log.i(TAG, "** daySteps :"+ daySteps+" ** stepCounted :"+stepsCounted);
 
@@ -222,8 +201,9 @@ public class StepCounterService extends Service implements SensorEventListener {
         }catch (JSONException err){
             Log.e(TAG,"Exception while setting int in JSON for "+currentDateString);
         }
+        
         editor.putString("pedometerData",pData.toString());
-        editor.commit();
+        editor.apply();
     }
 
     @Override
