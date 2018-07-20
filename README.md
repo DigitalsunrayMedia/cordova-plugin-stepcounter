@@ -69,29 +69,29 @@ Run the code
     
 ## Known Issues
 
- - The service auto-start on device BOOT, even if START command has never been called
- - The service won't really stop even if STOP command is called (will auto-restart)
- - The master count (getStepCount) should return the nb steps since START command has been sent, Todat : if service is killed it might restart to 0. 
+ - The service auto-start on device BOOT, even if START command has never been called (Before version 1.0.0)
+ - The service won't really stop even if STOP command is called (Before version 1.0.0)
+ - The master count (getStepCount) should return the nb steps since START command has been sent, Todat : if service is killed it might restart to 0. (Before version 1.0.0)
     
 ## Changes in 1.0.0
 
-Added : Android safe background worker for local database synchronization (In order to handle Android 8.0 + background execution limits)
-Replaced: Started background service with a bound service
+ - Added : Android safe background worker for local database synchronization (In order to handle Android 8.0 + background execution limits)
+ - Replaced: Started background service with a bound service
 
 ## Changes in 0.0.4
 
-Added : Re-integrated support for getStepCount which return the step counted since app is started
-Added : Method getTodayStepsCount for an agregated steps count for all a day (uses offset and history to calculate)
-Fixed : Issue with phone rebooting in a middle of a day (causes negative steps for the day, due to step < offset) 
+ - Added : Re-integrated support for getStepCount which return the step counted since app is started
+ - Added : Method getTodayStepsCount for an agregated steps count for all a day (uses offset and history to calculate)
+ - Fixed : Issue with phone rebooting in a middle of a day (causes negative steps for the day, due to step < offset) 
 
 ## Changes in 0.0.3
 
-getHistory() and getStepCount() return parsed JSON objects.
+ - getHistory() and getStepCount() return parsed JSON objects.
 
 ## Changes in 0.0.2
 
-The StepCounterService is now automatically relaunched when killed (and after one hour for some 4.4.2 START_STICKY Service problem).
-The StepCounterService should be automatically launched on device boot (using StepCounterBootReceiver)
+ - The StepCounterService is now automatically relaunched when killed (and after one hour for some 4.4.2 START_STICKY Service problem).
+ - The StepCounterService should be automatically launched on device boot (using StepCounterBootReceiver)
 
 All the step counter data are saved in the "UserData" SharedPrefs, with the "pedometerData" key so we keep the step counting history JSON formatted ("day": {"offset": XXX,"steps": YYY}
 A new js function (for cordova) called getHistory() has been added to access the JSON formatted data containing step count history
@@ -112,9 +112,3 @@ If you'd like to help, I'd love to hear from you!
 
 For more information on setting up Cordova see [the documentation](http://cordova.apache.org/docs/en/4.0.0/guide_cli_index.md.html#The%20Command-Line%20Interface)
 For more info on plugins see the [Plugin Development Guide](http://cordova.apache.org/docs/en/4.0.0/guide_hybrid_plugins_index.md.html#Plugin%20Development%20Guide)
-
-## Todo / Work in progress
-
-It should be interesting to merge this plugin with an ios compatible plugin such as [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer).
-We should look into changing the interface of this plugin for v0.1.0 release to match that of [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer) as closely as possible so as to be able to work towards this in the future.
-We should review the storage way in StepCounterService to use SQLite rather than SharedPreferences, so the custom queries will be possible
