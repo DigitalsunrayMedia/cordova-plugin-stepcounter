@@ -73,6 +73,11 @@ Run the code
  - The service won't really stop even if STOP command is called (will auto-restart)
  - The master count (getStepCount) should return the nb steps since START command has been sent, Todat : if service is killed it might restart to 0. 
     
+## Changes in 1.0.0
+
+Added : Android safe background worker for local database synchronization (In order to handle Android 8.0 + background execution limits)
+Replaced: Started background service with a bound service
+
 ## Changes in 0.0.4
 
 Added : Re-integrated support for getStepCount which return the step counted since app is started

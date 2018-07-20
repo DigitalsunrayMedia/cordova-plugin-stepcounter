@@ -42,6 +42,7 @@ import android.util.Log;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class CordovaStepCounter extends CordovaPlugin {
 
@@ -61,8 +62,6 @@ public class CordovaStepCounter extends CordovaPlugin {
 
     private StepCounterService stepCounterService;
     private boolean bound = false;
-
-    private Integer beginningOffset = 0;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -93,12 +92,10 @@ public class CordovaStepCounter extends CordovaPlugin {
             callbackContext.success( can ? 1 : 0 );
         }
         else if (ACTION_START.equals(action)) {
-            beginningOffset = data.getInt(0);
-
             Log.i(TAG, "Starting StepCounterService");
             isEnabled = true;
-            //stepCounterIntent.putExtra("beginningOffset", beginningOffset);
-            activity.startService(stepCounterIntent);
+
+            //STart the bound service...
             activity.bindService(stepCounterIntent, mConnection, Context.BIND_AUTO_CREATE);
         }
         else if (ACTION_STOP.equals(action)) {
@@ -116,7 +113,7 @@ public class CordovaStepCounter extends CordovaPlugin {
         }
         else if (ACTION_GET_STEPS.equals(action)) {
             if (isEnabled && bound) {
-                Integer steps = stepCounterService.getStepsCounted();
+                Integer steps = StepCounterHelper.getTotalCount(activity);
                 Log.i(TAG, "Geting steps counted from stepCounterService: " + steps);
                 callbackContext.success(steps);
             } else {
@@ -130,11 +127,11 @@ public class CordovaStepCounter extends CordovaPlugin {
                 String pDataString = sharedPref.getString("pedometerData", "{}");
 
                 Date currentDate = new Date();
-                SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                 String currentDateString = dateFormatter.format(currentDate);
 
                 JSONObject pData = new JSONObject();
-                JSONObject dayData = new JSONObject();
+                JSONObject dayData;
                 Integer daySteps = -1;
                 try{
                     pData = new JSONObject(pDataString);
@@ -178,7 +175,7 @@ public class CordovaStepCounter extends CordovaPlugin {
         return result;
     }
 
-    public static boolean deviceHasStepCounter(PackageManager pm) {
+    private static boolean deviceHasStepCounter(PackageManager pm) {
         // Require at least Android KitKat
         int currentApiVersion = Build.VERSION.SDK_INT;
 
@@ -195,6 +192,7 @@ public class CordovaStepCounter extends CordovaPlugin {
             activity.unbindService(mConnection);
             bound = false;
         }
+
         super.onDestroy();
     }
 }

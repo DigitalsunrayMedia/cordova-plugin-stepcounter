@@ -24,50 +24,86 @@ package net.texh.cordovapluginstepcounter;
 
  */
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+public class StepCounterService extends Service implements StepChangeListener {
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+    //region Variables
 
-public class StepCounterService extends Service implements SensorEventListener {
-
-    private final  String TAG        = "StepCounterService";
+    private final  String TAG = "StepCounterService";
     private static boolean isRunning = false;
+    private StepSensorManager stepSensorManager;
 
-    private SensorManager mSensorManager;
-    private Integer       stepsCounted    = 0;
+    //endregion
 
-    public Integer getStepsCounted() {
-        return stepsCounted;
-    }
-
-    public void stopTracking() {
-        Log.i(TAG, "Setting isRunning flag to false");
-        isRunning = false;
-        mSensorManager.unregisterListener(this);
-    }
+    //region Service Methods
 
     @Override
     public IBinder onBind(Intent intent) {
         IBinder mBinder = new StepCounterServiceBinder();
-        Log.i(TAG, "onBind" + intent);
+
+        SynchronizationManager.cancel();
+
+        //Start listening to the corresponding sensor (STEP_DETECTOR) ...
+        doInit();
+
         return mBinder;
     }
+
+    public void doInit() {
+        if(isRunning) {
+            Log.w(TAG, "This service is already started!");
+            return;
+        }
+
+        Log.i(TAG, "Registering STEP_DETECTOR sensor");
+
+        stepSensorManager = new StepSensorManager();
+        stepSensorManager.start(this, this);
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        //Stop listening to the sensor and start synchronization worker...
+        stopTracking();
+
+        return super.onUnbind(intent);
+    }
+
+    public void stopTracking() {
+        Log.i(TAG, "Setting isRunning flag to false");
+
+        try {
+            if (stepSensorManager != null)
+                stepSensorManager.stop();
+
+            //Start synchronization worker ...
+            SynchronizationManager.start();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        isRunning = false;
+    }
+
+    //endregion
+
+    //region Sensor Event Handlers
+
+    @Override
+    public void onChanged(float steps) {
+        //Step history changed, let's save it...
+        StepCounterHelper.saveSteps(steps, this);
+    }
+
+    //endregion
+
+    //region Binder Class
 
     class StepCounterServiceBinder extends Binder {
         StepCounterService getService() {
@@ -76,150 +112,5 @@ public class StepCounterService extends Service implements SensorEventListener {
         }
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.i(TAG, "onCreate");
-        // Do some setup stuff
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand");
-
-        //@TODO should test if startCommand is from autolaunch on boot -> then if yes, check if CordovaStepCounter.ACTION_START has really been called or die
-        Log.i(TAG, "- Relaunch service in 1 hour (4.4.2 start_sticky bug ) : ");
-        Intent newServiceIntent = new Intent(this,StepCounterService.class);
-        AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        PendingIntent stepIntent = PendingIntent.getService(getApplicationContext(), 10, newServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        //PendingIntent.GetService (ApplicationContext, 10, intent2, PendingIntentFlags.UpdateCurrent);
-
-        if (aManager != null)
-            aManager.set(AlarmManager.RTC, System.currentTimeMillis() + 1000 * 60 * 60, stepIntent);
-
-        if (isRunning /* || has no step sensors */) {
-            Log.i(TAG, "Not initialising sensors");
-            return Service.START_STICKY;
-        }
-
-        Log.i(TAG, "Initialising sensors");
-        doInit();
-
-        isRunning = true;
-        return Service.START_STICKY;
-    }
-
-
-    public void doInit() {
-        Log.i(TAG, "Registering STEP_DETECTOR sensor");
-        stepsCounted  = 0;
-
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        Sensor mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-
-        mSensorManager.registerListener(this, mStepSensor, SensorManager.SENSOR_DELAY_NORMAL);
-    }
-
-    @Override
-    public boolean stopService(Intent intent) {
-        Log.i(TAG, "- Received stop: " + intent);
-        //Stop listening to events when stop() is called
-        if(isRunning){
-            mSensorManager.unregisterListener(this);
-        }
-
-        isRunning = false;
-
-        Log.i(TAG, "- Relaunch service in 500ms" );
-        //Autorelaunch the service
-        Intent newServiceIntent = new Intent(this,StepCounterService.class);
-        AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        if (aManager != null)
-            aManager.set(AlarmManager.RTC, System.currentTimeMillis() + 500,
-                        PendingIntent.getService(this,11,
-                        newServiceIntent,0));
-
-        return super.stopService(intent);
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-
-
-        //Log.i(TAG, "onSensorChanged event!");
-        Integer steps = Math.round(sensorEvent.values[0]);
-
-        Integer daySteps = 0;
-        Integer dayOffset = 0;
-
-        Date currentDate = new Date();
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
-
-        String currentDateString = dateFormatter.format(currentDate);
-        SharedPreferences sharedPref = getSharedPreferences("UserData", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-
-        JSONObject pData = new JSONObject();
-        JSONObject dayData = new JSONObject();
-        if(sharedPref.contains("pedometerData")){
-            String pDataString = sharedPref.getString("pedometerData","{}");
-            try{
-                pData = new JSONObject(pDataString);
-                Log.d(TAG," got json shared prefs "+pData.toString());
-            }catch (JSONException err){
-                Log.d(TAG," Exception while parsing json string : "+pDataString);
-            }
-        }
-
-        //Get the datas previously stored for today
-        if(pData.has(currentDateString)){
-            try {
-                dayData = pData.getJSONObject(currentDateString);
-                dayOffset = dayData.getInt("offset");
-                daySteps = dayData.getInt("steps");
-
-            }catch(JSONException err){
-                Log.e(TAG,"Exception while getting Object from JSON for "+currentDateString);
-            }
-        }
-
-        //Counter += 1
-        stepsCounted += 1;
-
-        //First 'steps' is 0 an not 1
-        daySteps += steps;
-
-        //Log all this
-        Log.i(TAG, "** daySteps :"+ daySteps+" ** stepCounted :"+stepsCounted);
-
-
-        //Save calculated values to SharedPreferences
-        try{
-            dayData.put("steps",daySteps);
-            dayData.put("offset",dayOffset);
-            pData.put(currentDateString,dayData);
-        }catch (JSONException err){
-            Log.e(TAG,"Exception while setting int in JSON for "+currentDateString);
-        }
-        
-        editor.putString("pedometerData",pData.toString());
-        editor.apply();
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-        Log.i(TAG, "onAccuracyChanged: " + sensor);
-        Log.i(TAG, "  Accuracy: " + i);
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        Log.i(TAG, "onUnbind");
-        return super.onUnbind(intent);
-    }
-
-    @Override
-    public void onDestroy(){
-        Log.i(TAG, "onDestroy");
-    }
+    //endregion
 }
