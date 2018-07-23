@@ -59,7 +59,7 @@ public class StepCounterHelper {
                 if(pData.has(yesterdayDateString)) {
                     //Try to fetch the offset from Yesterday data, if any....
                     JSONObject yesterdayData = pData.getJSONObject(yesterdayDateString);
-                    dayOffset = yesterdayData.getInt("offset");
+                    dayOffset = yesterdayData.getInt("offset") + yesterdayData.getInt("steps");
                 }
                 else
                     //Change offset for current count...
