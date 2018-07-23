@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -31,7 +32,7 @@ public class StepCounterHelper {
 
             String currentDateString = dateFormatter.format(currentDate);
             SharedPreferences sharedPref = context.getSharedPreferences("UserData",
-                                                                        Context.MODE_PRIVATE);
+                    Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
 
             JSONObject pData = new JSONObject();
@@ -41,17 +42,28 @@ public class StepCounterHelper {
                 pData = new JSONObject(pDataString);
             }
 
-            //Get the datas previously stored for today
-            if(pData.has(currentDateString)){
+            //Get the data previously stored for today
+            if (pData.has(currentDateString)) {
                 dayData = pData.getJSONObject(currentDateString);
                 dayOffset = dayData.getInt("offset");
                 oldDaySteps = dayData.getInt("steps");
-                if(dayData.has("buffer")) //Backward compatibility check!
+
+                if (dayData.has("buffer")) //Backward compatibility check!
                     dayBuffer = dayData.getInt("buffer");
 
-            }else{
-                //Change offset for current count
-                dayOffset = steps - oldDaySteps;
+            } else {
+                Calendar calendar = Calendar.getInstance();
+                calendar.add(Calendar.DATE, -1);
+                String yesterdayDateString = dateFormatter.format(calendar.getTime());
+
+                if(pData.has(yesterdayDateString)) {
+                    //Try to fetch the offset from Yesterday data, if any....
+                    JSONObject yesterdayData = pData.getJSONObject(yesterdayDateString);
+                    dayOffset = yesterdayData.getInt("offset");
+                }
+                else
+                    //Change offset for current count...
+                    dayOffset = steps - oldDaySteps;
             }
 
             //Calculate the today's step ....
@@ -89,7 +101,7 @@ public class StepCounterHelper {
     static int getTotalCount(@NonNull Context context){
         Integer totalCount = 0;
         SharedPreferences sharedPref = context.getSharedPreferences("UserData",
-                                                                        Context.MODE_PRIVATE);
+                Context.MODE_PRIVATE);
         if(sharedPref.contains("PEDOMETER_TOTAL_COUNT_PREF"))
             totalCount = sharedPref.getInt("PEDOMETER_TOTAL_COUNT_PREF", 0);
 
@@ -98,7 +110,7 @@ public class StepCounterHelper {
 
     private static void setTotalCount(@NonNull Context context, Integer newValue){
         SharedPreferences sharedPref = context.getSharedPreferences("UserData",
-                                                                    Context.MODE_PRIVATE);
+                Context.MODE_PRIVATE);
         SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
         sharedPrefEditor.putInt("PEDOMETER_TOTAL_COUNT_PREF", newValue);
         sharedPrefEditor.apply();
