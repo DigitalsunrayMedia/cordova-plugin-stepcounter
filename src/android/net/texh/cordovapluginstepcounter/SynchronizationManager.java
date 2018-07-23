@@ -18,10 +18,6 @@ public class SynchronizationManager {
             //Start synchronization worker ...
             WorkManager manager = WorkManager.getInstance();
             if (manager != null) {
-
-                //Let's first cancel all available synchronization task(s) if any...
-                cancel();
-
                 //Start synchronization worker every 15 minutes...
                 //NOTE: Minimum time for periodic requests is 15 minutes (mentioned it in the IO 18)
                 PeriodicWorkRequest.Builder synchWorkerRequest = new PeriodicWorkRequest.Builder(SynchronizationWorker.class,
