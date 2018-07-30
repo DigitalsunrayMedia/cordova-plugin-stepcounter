@@ -42,7 +42,7 @@
             </feature>
         </config-file>
 
-        <dependency id="android.arch.work:work-runtime" version="1.0.0-alpha04"/>
+        <dependency id="android.arch.work:work-runtime" version="1.0.0-alpha05"/>
 
         <source-file src="src/android/net/texh/cordovapluginstepcounter/CordovaStepCounter.java"
             target-dir="src/net/texh/cordovapluginstepcounter/" />

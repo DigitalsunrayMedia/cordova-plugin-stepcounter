@@ -15,25 +15,20 @@ public class SynchronizationManager {
 
     public static void start() {
         try {
-            //Start synchronization worker ...
-            WorkManager manager = WorkManager.getInstance();
-            if (manager != null) {
-                //Start synchronization worker every 15 minutes...
-                //NOTE: Minimum time for periodic requests is 15 minutes (mentioned it in the IO 18)
-                PeriodicWorkRequest.Builder synchWorkerRequest = new PeriodicWorkRequest.Builder(SynchronizationWorker.class,
-                                                                    15,
-                                                                    TimeUnit.MINUTES)
-                                                                    .addTag(SynchronizationWorker.class.getSimpleName());
+            //Start synchronization worker every 15 minutes...
+            //NOTE: Minimum time for periodic requests is 15 minutes (mentioned it in the IO 18)
+            PeriodicWorkRequest.Builder synchWorkerRequest = new PeriodicWorkRequest.Builder(SynchronizationWorker.class,
+                                                                15,
+                                                                TimeUnit.MINUTES)
+                                                                .addTag(SynchronizationWorker.class.getSimpleName());
 
-                // Create the actual work object:
-                PeriodicWorkRequest synchWorker = synchWorkerRequest.build();
+            // Create the actual work object:
+            PeriodicWorkRequest synchWorker = synchWorkerRequest.build();
 
+            //enqueue the recurring task:
+            WorkManager.getInstance().enqueueUniquePeriodicWork(SynchronizationWorker.class.getSimpleName(),
+                                                                ExistingPeriodicWorkPolicy.KEEP,
 
-                //enqueue the recurring task:
-                manager.enqueueUniquePeriodicWork(  SynchronizationWorker.class.getSimpleName(),
-                                                    ExistingPeriodicWorkPolicy.KEEP,
-                                                    synchWorker);
-            }
         }
         catch (Throwable throwable) {
             throwable.printStackTrace();
@@ -43,9 +38,7 @@ public class SynchronizationManager {
     public static void cancel() {
         try {
             //Cancel all available synchronization work(s)...
-            WorkManager manager = WorkManager.getInstance();
-            if(manager  != null)
-                manager.cancelAllWorkByTag(SynchronizationWorker.class.getSimpleName());
+            WorkManager.getInstance().cancelAllWorkByTag(SynchronizationWorker.class.getSimpleName());
         }
         catch (Throwable throwable) {
             throwable.printStackTrace();
