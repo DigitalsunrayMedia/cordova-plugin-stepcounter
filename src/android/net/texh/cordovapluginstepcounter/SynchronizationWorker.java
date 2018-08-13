@@ -40,10 +40,6 @@ public class SynchronizationWorker extends Worker implements StepChangeListener 
 
     @Override
     public void onChanged(float steps) {
-        //We are good, let's stop the sensor listener now...
-        if(stepSensorManager != null)
-            stepSensorManager.stop();
-
         //Save the new steps locally...
         StepCounterHelper.saveSteps(steps, getApplicationContext());
     }

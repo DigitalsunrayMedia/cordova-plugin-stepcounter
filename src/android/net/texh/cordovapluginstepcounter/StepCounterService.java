@@ -68,25 +68,17 @@ public class StepCounterService extends Service implements StepChangeListener {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        //Stop listening to the sensor and start synchronization worker...
-        stopTracking();
+        //Start synchronization worker ...
+        SynchronizationManager.start();
 
         return super.onUnbind(intent);
     }
 
     public void stopTracking() {
-        Log.i(TAG, "Setting isRunning flag to false");
+        Log.i(TAG, "Stop step tracking...");
 
-        try {
-            if (stepSensorManager != null)
-                stepSensorManager.stop();
-
-            //Start synchronization worker ...
-            SynchronizationManager.start();
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        if (stepSensorManager != null)
+            stepSensorManager.stop();
 
         isRunning = false;
     }

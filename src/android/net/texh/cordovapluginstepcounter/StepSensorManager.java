@@ -56,7 +56,17 @@ public class StepSensorManager implements SensorEventListener {
 
     public void stop() {
         try {
+             /*
+            NOTE:
+             If you want to continuously track the number of steps over a long
+             period of time, do NOT unregister for this sensor, so that it keeps counting steps in the
+             background even when the AP is in suspend mode and report the aggregate count when the AP
+             is awake. Application needs to stay registered for this sensor because step counter does not
+             count steps if it is not activated.
+             */
+
             isStarted = false;
+            listener = null;
 
             //Let's stop the step detector sensor :(
             if(manager != null) {

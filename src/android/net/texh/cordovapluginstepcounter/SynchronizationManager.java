@@ -18,9 +18,9 @@ public class SynchronizationManager {
             //Start synchronization worker every 15 minutes...
             //NOTE: Minimum time for periodic requests is 15 minutes (mentioned it in the IO 18)
             PeriodicWorkRequest.Builder synchWorkerRequest = new PeriodicWorkRequest.Builder(SynchronizationWorker.class,
-                                                                15,
-                                                                TimeUnit.MINUTES)
-                                                                .addTag(SynchronizationWorker.class.getSimpleName());
+                                                                                            15,
+                                                                                            TimeUnit.MINUTES)
+                                                                                            .addTag(SynchronizationWorker.class.getSimpleName());
 
             // Create the actual work object:
             PeriodicWorkRequest synchWorker = synchWorkerRequest.build();
@@ -28,7 +28,7 @@ public class SynchronizationManager {
             //enqueue the recurring task:
             WorkManager.getInstance().enqueueUniquePeriodicWork(SynchronizationWorker.class.getSimpleName(),
                                                                 ExistingPeriodicWorkPolicy.KEEP,
-
+                                                                synchWorker);
         }
         catch (Throwable throwable) {
             throwable.printStackTrace();
