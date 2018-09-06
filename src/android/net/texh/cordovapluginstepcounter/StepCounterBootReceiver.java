@@ -8,7 +8,13 @@ public class StepCounterBootReceiver extends BroadcastReceiver{
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Intent stepCounterServiceIntent = new Intent(context,StepCounterService.class);
-        context.startService(stepCounterServiceIntent);
+        try {
+            //start service
+            Intent stepCounterIntent = new Intent(context, StepCounterService.class);
+            context.startService(stepCounterIntent);
+        } catch (Exception e){
+            e.printStackTrace();
+            Log.e("StepCounter", "StepCounterRestartReceiver - Cannot start step counter service.");
+        }
     }
 }
