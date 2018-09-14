@@ -185,7 +185,7 @@ public class StepCounterService extends Service implements SensorEventListener {
 
         //custom notification ui
         RemoteViews views = new RemoteViews(getPackageName(), R.layout.sticky_notification);
-        views.setTextViewText(R.id.tvSteps, "" + getTodaySteps());
+        views.setTextViewText(R.id.tvSteps, getTodaySteps());
         builder.setCustomContentView(views);
 
         Notification notification = builder.build();
@@ -271,7 +271,7 @@ public class StepCounterService extends Service implements SensorEventListener {
         updateNotification();
     }
 
-    private int getTodaySteps(){
+    private String getTodaySteps(){
         Integer daySteps = 0;
 
         Date currentDate = new Date();
@@ -302,7 +302,10 @@ public class StepCounterService extends Service implements SensorEventListener {
             }
         }
 
-        return daySteps;
+        DecimalFormat formatter = new DecimalFormat("#,###,###");
+        String stepsString = formatter.format(daySteps);
+
+        return stepsString;
     }
 
     @Override
