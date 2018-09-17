@@ -25,17 +25,13 @@ package net.texh.cordovapluginstepcounter;
  */
 
 import android.annotation.TargetApi;
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -45,13 +41,9 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
-
-import com.dsr.sc.MainActivity;
-import com.dsr.sc.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -172,20 +164,20 @@ public class StepCounterService extends Service implements SensorEventListener {
         }
         builder = new NotificationCompat.Builder(this, channelId);
 
-        builder.setSmallIcon(R.drawable.notification_icon);
+        builder.setSmallIcon(getResources().getIdentifier("notification_icon", "drawable", getPackageName()));
         builder.setAutoCancel(false);
         builder.setOngoing(true);
         builder.setPriority(Notification.PRIORITY_MAX);
         builder.setVisibility(Notification.VISIBILITY_PUBLIC);
 
         //handle notification click, open main activity
-        Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1110, intent,   PendingIntent.FLAG_UPDATE_CURRENT);
-        builder.setContentIntent(pendingIntent);
+        //Intent intent = new Intent(this, MainActivity.class);
+        //PendingIntent pendingIntent = PendingIntent.getActivity(this, 1110, intent,   PendingIntent.FLAG_UPDATE_CURRENT);
+        //builder.setContentIntent(pendingIntent);
 
         //custom notification ui
-        RemoteViews views = new RemoteViews(getPackageName(), R.layout.sticky_notification);
-        views.setTextViewText(R.id.tvSteps, getTodaySteps());
+        RemoteViews views = new RemoteViews(getPackageName(), getResources().getIdentifier("sticky_notification", "layout", getPackageName()));
+        views.setTextViewText(getResources().getIdentifier("tvSteps", "id", getPackageName()), getTodaySteps());
         builder.setCustomContentView(views);
 
         Notification notification = builder.build();
@@ -197,8 +189,8 @@ public class StepCounterService extends Service implements SensorEventListener {
     private void updateNotification(){
         Log.d(TAG, "update notification");
 
-        RemoteViews views = new RemoteViews(getPackageName(), R.layout.sticky_notification);
-        views.setTextViewText(R.id.tvSteps, "" + getTodaySteps());
+        RemoteViews views = new RemoteViews(getPackageName(), getResources().getIdentifier("sticky_notification", "layout", getPackageName()));
+        views.setTextViewText(getResources().getIdentifier("tvSteps", "id", getPackageName()), getTodaySteps());
         builder.setCustomContentView(views);
 
         NotificationManager notificationManager =
@@ -302,8 +294,7 @@ public class StepCounterService extends Service implements SensorEventListener {
             }
         }
 
-        DecimalFormat formatter = new DecimalFormat("#,###,###");
-        String stepsString = formatter.format(daySteps);
+        String stepsString = String.format("%,d", daySteps);
 
         return stepsString;
     }
