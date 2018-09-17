@@ -171,9 +171,9 @@ public class StepCounterService extends Service implements SensorEventListener {
         builder.setVisibility(Notification.VISIBILITY_PUBLIC);
 
         //handle notification click, open main activity
-        //Intent intent = new Intent(this, MainActivity.class);
-        //PendingIntent pendingIntent = PendingIntent.getActivity(this, 1110, intent,   PendingIntent.FLAG_UPDATE_CURRENT);
-        //builder.setContentIntent(pendingIntent);
+        Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1110, intent,   PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
 
         //custom notification ui
         RemoteViews views = new RemoteViews(getPackageName(), getResources().getIdentifier("sticky_notification", "layout", getPackageName()));
