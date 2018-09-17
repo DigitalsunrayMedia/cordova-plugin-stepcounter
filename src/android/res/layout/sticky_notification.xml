@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:background="#0091b3">
+    
+    <ImageView
+        android:id="@+id/ivSteps"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:scaleType="fitCenter"
+        android:padding="16dp"
+        android:src="@drawable/notification_image"/>
+
+    <TextView
+        android:id="@+id/tvSteps"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:gravity="center_vertical"
+        android:textColor="@android:color/white"
+        android:textSize="28sp"
+        android:layout_toRightOf="@+id/ivSteps"
+        android:layout_toLeftOf="@+id/tvOpen"
+        tools:text="15436"/>
+
+    <TextView
+        android:id="@+id/tvOpen"
+        android:layout_width="wrap_content"
+        android:layout_height="70dp"
+        android:gravity="center_vertical"
+        android:layout_alignParentRight="true"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:padding="10dp"
+        android:text="Öffnen"/>
+
+</RelativeLayout>
