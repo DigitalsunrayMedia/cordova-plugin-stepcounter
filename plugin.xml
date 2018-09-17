@@ -46,9 +46,9 @@
     <source-file src="src/android/net/texh/cordovapluginstepcounter/CordovaStepCounter.java" target-dir="src/net/texh/cordovapluginstepcounter/"/>
     <source-file src="src/android/net/texh/cordovapluginstepcounter/StepCounterService.java" target-dir="src/net/texh/cordovapluginstepcounter/"/>
     <source-file src="src/android/net/texh/cordovapluginstepcounter/StepCounterBootReceiver.java" target-dir="src/net/texh/cordovapluginstepcounter/"/>
-    <source-file src="src/android/res/layout/sticky_notification.xml" target-dir="src/android/res/layout/"/>
-    <source-file src="src/android/res/drawable-hdpi/notification_icon.png" target-dir="src/android/res/drawable-hdpi/"/>
-    <source-file src="src/android/res/drawable-hdpi/notification_image.png" target-dir="src/android/res/drawable-hdpi/"/>
+    <source-file src="src/android/res/layout/sticky_notification.xml" target-dir="src/res/layout/"/>
+    <source-file src="src/android/res/drawable-hdpi/notification_icon.png" target-dir="src/res/drawable-hdpi/"/>
+    <source-file src="src/android/res/drawable-hdpi/notification_image.png" target-dir="src/res/drawable-hdpi/"/>
     
   </platform>
 
