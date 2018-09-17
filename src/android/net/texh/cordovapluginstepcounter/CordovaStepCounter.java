@@ -93,6 +93,10 @@ public class CordovaStepCounter extends CordovaPlugin {
             callbackContext.success( can ? 1 : 0 );
         }
         else if (ACTION_START.equals(action)) {
+            if(!deviceHasStepCounter(activity.getPackageManager())){
+                Log.i(TAG, "Step detector not supported");
+                return true;
+            }
             beginningOffset = data.getInt(0);
 
             Log.i(TAG, "Starting StepCounterService");
