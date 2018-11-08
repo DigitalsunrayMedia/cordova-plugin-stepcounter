@@ -1,5 +1,6 @@
 package net.texh.cordovapluginstepcounter;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,20 +9,19 @@ import android.util.Log;
 
 public class StepCounterBootReceiver extends BroadcastReceiver {
 
-    // Method is called after device bootup is complete
+    //This method is called after device booting is complete!
+    @SuppressLint("UnsafeProtectedBroadcastReceiver")
     public void onReceive(final Context context, Intent arg1) {
         try {
-            //start service
+            //Start the step counter service...
             Intent stepCounterIntent = new Intent(context, StepCounterService.class);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 context.startForegroundService(stepCounterIntent);
-            } else {
+            else
                 context.startService(stepCounterIntent);
-            }
+
         } catch (Exception e){
-            e.printStackTrace();
-            Log.e("StepCounter", "StepCounterBootReceiver - Cannot start step counter service.");
+            Log.e("StepCounterService", "StepCounterBootReceiver: Cannot start step counter service.");
         }
     }
-    
 }

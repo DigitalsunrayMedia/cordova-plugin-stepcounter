@@ -24,7 +24,7 @@ package net.texh.cordovapluginstepcounter;
 
  */
 
-import android.annotation.TargetApi;
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -32,13 +32,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
+import android.content.IntentFilter;
 import android.hardware.SensorManager;
-import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -46,17 +41,14 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.Locale;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-public class StepCounterService extends Service implements SensorEventListener {
+public class StepCounterService extends Service implements StepChangeListener {
 
     //region Constants
 
     private static final int NOTIFICATION_ID = 777;
+    private static final String STEPS_TEXT_FORMAT = "%,d";
 
     //endregion
 
@@ -64,288 +56,210 @@ public class StepCounterService extends Service implements SensorEventListener {
 
     private final String TAG = "StepCounterService";
     private static boolean isRunning = false;
-    private SensorManager mSensorManager;
+    private StepSensorManager stepSensorManager;
     private NotificationCompat.Builder builder;
-    private Integer stepsCounted = 0;
+    private StepCounterShutdownReceiver stepCounterShutdownReceiver;
 
     //endregion
 
-    //region Service Methods
+    //region Service Method/Events
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand");
+        Log.i(TAG, "StepCounterService: onStartCommand is called!");
 
-        if (isRunning /* || has no step sensors */) {
-            Log.i(TAG, "Not initialising sensors");
+        if (isRunning /* || has no step sensors */)
             return Service.START_STICKY;
+
+        Log.i(TAG, "StepCounterService: Relaunch service in 1 hour (4.4.2 start_sticky bug ) ...");
+
+        Intent newServiceIntent = new Intent(this,StepCounterService.class);
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        if(manager != null) {
+            PendingIntent stepIntent = PendingIntent.getService(getApplicationContext(),
+                                                                10,
+                                                                newServiceIntent,
+                                                                PendingIntent.FLAG_UPDATE_CURRENT);
+            manager.set(AlarmManager.RTC, java.lang.System.currentTimeMillis() + 1000 * 60 * 60, stepIntent);
         }
 
-        Log.i(TAG, "- Relaunch service in 1 hour (4.4.2 start_sticky bug ) : ");
-        Intent newServiceIntent = new Intent(this,StepCounterService.class);
-        AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        PendingIntent stepIntent = PendingIntent.getService(getApplicationContext(), 10, newServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        aManager.set(AlarmManager.RTC, java.lang.System.currentTimeMillis() + 1000 * 60 * 60, stepIntent);
-
-        Log.i(TAG, "Initialising sensors");
+        //Initialising sensors...
         doInit();
 
         isRunning = true;
         return Service.START_STICKY;
     }
 
+    public void doInit() {
+        try {
+            if (isRunning)
+                return;
+
+            Log.i(TAG, "StepCounterService: Registering STEP_DETECTOR sensor...");
+
+            stepSensorManager = new StepSensorManager();
+            stepSensorManager.start(this, this, SensorManager.SENSOR_DELAY_NORMAL);
+
+            //Start foreground service with an sticky notification...
+            startForegroundService();
+
+            //This is broadcast when the device is being shut down (completely turned off, not sleeping).
+            //Once the broadcast is complete, the final shutdown will proceed and all unsaved data lost.
+            //As of Build.VERSION_CODES.P this broadcast is only sent to receivers registered through
+            //Context.registerReceiver (Google said!)
+            if (stepCounterShutdownReceiver == null) {
+                stepCounterShutdownReceiver = new StepCounterShutdownReceiver();
+
+                registerReceiver(   stepCounterShutdownReceiver,
+                                    new IntentFilter(Intent.ACTION_SHUTDOWN));
+            }
+        }
+        catch (Exception ex) {
+            Log.w(TAG, "StepCounterService: Initialization failed. " + ex.getMessage());
+        }
+    }
+
     @Override
     public IBinder onBind(Intent intent) {
-        IBinder mBinder = new StepCounterServiceBinder();
-        Log.i(TAG, "onBind" + intent);
-        return mBinder;
+        return null;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "onCreate");
-        // Do some setup stuff
+        Log.i(TAG, "StepCounterService: onCreate() is called!");
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        Log.i(TAG, "onUnbind");
+        Log.i(TAG, "StepCounterService: onUnbind() is called!");
         return super.onUnbind(intent);
     }
 
     @Override
-    public void onDestroy(){
-        Log.i(TAG, "onDestroy");
-    }
-
-    @Override
     public boolean stopService(Intent intent) {
-        Log.i(TAG, "- Received stop: " + intent);
-        //Stop listening to events when stop() is called
-        if(isRunning){
-            mSensorManager.unregisterListener(this);
+        Log.i(TAG, "StepCounterService: Received stop service: " + intent);
+
+        if(isRunning) {
+            //Stop listening to events when stop() is called
+            if(stepSensorManager != null)
+                stepSensorManager.stop();
+
+            //Unregister shutdown/reboot broadcast receiver!
+            if(stepCounterShutdownReceiver != null) {
+                unregisterReceiver(stepCounterShutdownReceiver);
+                stepCounterShutdownReceiver = null;
+            }
         }
 
         isRunning = false;
 
-        Log.i(TAG, "- Relaunch service in 500ms" );
-        //Autorelaunch the service
+        Log.i(TAG, "StepCounterService: Relaunch service in 1000ms ..." );
+
+        //Auto-Relaunch the service....
         Intent newServiceIntent = new Intent(this,StepCounterService.class);
-        AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        if (aManager != null)
-            aManager.set(AlarmManager.RTC, System.currentTimeMillis() + 500,
-                        PendingIntent.getService(this,11,
-                        newServiceIntent,0));
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (manager != null)
+            manager.set(AlarmManager.RTC, System.currentTimeMillis() + 1000,
+                        PendingIntent.getService(   this,11,
+                                                    newServiceIntent,0));
 
         return super.stopService(intent);
     }
 
+    @Override
+    public void onDestroy(){
+        Log.i(TAG, "StepCounterService: onDestroy() is called!");
+        super.onDestroy();
+    }
+
     //endregion
 
-    public Integer getStepsCounted() {
-        return stepsCounted;
-    }
-
-    public void stopTracking() {
-        Log.i(TAG, "Setting isRunning flag to false");
-        isRunning = false;
-        mSensorManager.unregisterListener(this);
-    }
-
-    public void doInit() {
-        if(isRunning){
-            return;
-        }
-
-        Log.i(TAG, "Registering STEP_DETECTOR sensor");
-        stepsCounted  = 0;
-
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        Sensor mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-
-        mSensorManager.registerListener(this, mStepSensor, SensorManager.SENSOR_DELAY_NORMAL);
-
-        startForegroundService();
-    }
+    //region Methods
 
     /* Used to build and start foreground service. */
     private void startForegroundService()
     {
-        Log.d(TAG, "Start foreground service.");
+        Log.d(TAG, "StepCounterService: Starting the foreground service...");
 
-        String channelId = "StepCounterChannel";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createChannel();
-        }
-        builder = new NotificationCompat.Builder(this, channelId);
+        builder = new NotificationCompat.Builder(this, createChannel());
 
-        builder.setSmallIcon(getResources().getIdentifier("notification_icon", "drawable", getPackageName()));
+        builder.setSmallIcon(getResources().getIdentifier(  "notification_icon",
+                                                            "drawable",
+                                                            getPackageName()));
         builder.setAutoCancel(false);
         builder.setOngoing(true);
         builder.setPriority(Notification.PRIORITY_MAX);
-        builder.setVisibility(Notification.VISIBILITY_PUBLIC);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            builder.setVisibility(Notification.VISIBILITY_PUBLIC);
 
         //handle notification click, open main activity
         Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1110, intent,   PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1110, intent,
+                                                                PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(pendingIntent);
 
-        //custom notification ui
-        RemoteViews views = new RemoteViews(getPackageName(), getResources().getIdentifier("sticky_notification", "layout", getPackageName()));
-        views.setTextViewText(getResources().getIdentifier("tvSteps", "id", getPackageName()), getTodaySteps());
+        //custom notification UI...
+        RemoteViews views = new RemoteViews(getPackageName(), getResources().getIdentifier( "sticky_notification",
+                                                                                            "layout",
+                                                                                            getPackageName()));
+
+        views.setTextViewText(getResources().getIdentifier( "tvSteps",
+                                                            "id",
+                                                            getPackageName()),
+                                                            String.format(  Locale.getDefault(), STEPS_TEXT_FORMAT,
+                                                                            StepCounterHelper.getTodaySteps(this)));
         builder.setCustomContentView(views);
 
         Notification notification = builder.build();
 
-        // Start foreground service.
+        // Start foreground service...
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    private void updateNotification(){
-        Log.d(TAG, "update notification");
+    private void updateNotification(int steps){
+        Log.d(TAG, "StepCounterService: Updating the notification ...");
 
-        RemoteViews views = new RemoteViews(getPackageName(), getResources().getIdentifier("sticky_notification", "layout", getPackageName()));
-        views.setTextViewText(getResources().getIdentifier("tvSteps", "id", getPackageName()), getTodaySteps());
+        RemoteViews views = new RemoteViews(getPackageName(), getResources().getIdentifier( "sticky_notification",
+                                                                                            "layout",
+                                                                                            getPackageName()));
+        views.setTextViewText(getResources().getIdentifier( "tvSteps",
+                                                            "id",
+                                                            getPackageName()),
+                                                            String.format(Locale.getDefault(), STEPS_TEXT_FORMAT, steps));
         builder.setCustomContentView(views);
 
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(NOTIFICATION_ID, builder.build());
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-
-        //Log.i(TAG, "onSensorChanged event!");
-        Integer steps = Math.round(sensorEvent.values[0]);
-
-        Integer daySteps = 0;
-        Integer dayOffset = 0;
-
-        Date currentDate = new Date();
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
-
-        String currentDateString = dateFormatter.format(currentDate);
-        SharedPreferences sharedPref = getSharedPreferences("UserData", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-
-        JSONObject pData = new JSONObject();
-        JSONObject dayData = new JSONObject();
-        if(sharedPref.contains("pedometerData")){
-            String pDataString = sharedPref.getString("pedometerData","{}");
-            try{
-                pData = new JSONObject(pDataString);
-                Log.d(TAG," got json shared prefs "+pData.toString());
-            }catch (JSONException err){
-                Log.d(TAG," Exception while parsing json string : "+pDataString);
-            }
-        }
-
-        //Get the datas previously stored for today
-        if(pData.has(currentDateString)){
-            try {
-                dayData = pData.getJSONObject(currentDateString);
-                dayOffset = dayData.getInt("offset");
-                daySteps = dayData.getInt("steps");
-
-            }catch(JSONException err){
-                Log.e(TAG,"Exception while getting Object from JSON for "+currentDateString);
-            }
-        }
-
-        //Counter += 1
-        stepsCounted += 1;
-
-        //First 'steps' is 0 an not 1
-        daySteps += steps;
-
-        //Log all this
-        Log.i(TAG, "** daySteps :"+ daySteps+" ** stepCounted :"+stepsCounted);
-
-
-        //Save calculated values to SharedPreferences
-        try{
-            dayData.put("steps",daySteps);
-            dayData.put("offset",dayOffset);
-            pData.put(currentDateString,dayData);
-        }catch (JSONException err){
-            Log.e(TAG,"Exception while setting int in JSON for "+currentDateString);
-        }
-
-        editor.putString("pedometerData",pData.toString());
-        editor.apply();
-
-        updateNotification();
-    }
-
-    private String getTodaySteps(){
-        Integer daySteps = 0;
-
-        Date currentDate = new Date();
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
-
-        String currentDateString = dateFormatter.format(currentDate);
-        SharedPreferences sharedPref = getSharedPreferences("UserData", Context.MODE_PRIVATE);
-
-        JSONObject pData = new JSONObject();
-        JSONObject dayData;
-        if(sharedPref.contains("pedometerData")){
-            String pDataString = sharedPref.getString("pedometerData","{}");
-            try{
-                pData = new JSONObject(pDataString);
-                Log.d(TAG," got json shared prefs "+pData.toString());
-            } catch (JSONException err){
-                Log.d(TAG," Exception while parsing json string : "+pDataString);
-            }
-        }
-
-        //Get the datas previously stored for today
-        if(pData.has(currentDateString)){
-            try {
-                dayData = pData.getJSONObject(currentDateString);
-                daySteps = dayData.getInt("steps");
-            } catch(JSONException err){
-                Log.e(TAG,"Exception while getting Object from JSON for "+currentDateString);
-            }
-        }
-
-        String stepsString = String.format("%,d", daySteps);
-
-        return stepsString;
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-        Log.i(TAG, "onAccuracyChanged: " + sensor);
-        Log.i(TAG, "  Accuracy: " + i);
-    }
-
-    class StepCounterServiceBinder extends Binder {
-        StepCounterService getService() {
-            // Return this instance of StepCounterService so clients can call public methods
-            return StepCounterService.this;
-        }
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if(manager != null)
+            manager.notify(NOTIFICATION_ID, builder.build());
     }
 
     @NonNull
-    @TargetApi(26)
     private String createChannel() {
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        String name = "StepCounter";
-        int importance = NotificationManager.IMPORTANCE_LOW;
+        if(manager != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(  getPackageName(), getPackageName(),
+                                                                    NotificationManager.IMPORTANCE_LOW);
 
-        NotificationChannel mChannel = new NotificationChannel("StepCounterChannel", name, importance);
-
-        mChannel.enableLights(true);
-        mChannel.setLightColor(Color.BLUE);
-        if (mNotificationManager != null) {
-            mNotificationManager.createNotificationChannel(mChannel);
-        } else {
-            stopSelf();
+            channel.enableLights(false);
+            manager.createNotificationChannel(channel);
         }
-        return "StepCounterChannel";
+
+        return getPackageName();
     }
+
+    //endregion
+
+    //region Sensor Event Handlers
+
+    @Override
+    public void onChanged(float steps) {
+        //Step history changed, let's save it...
+        updateNotification(StepCounterHelper.saveSteps(steps, this));
+    }
+
+    //endregion
 
 }

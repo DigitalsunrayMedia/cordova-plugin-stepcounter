@@ -2,6 +2,10 @@
 
 Uses the step counter service APIs introduced in Android 4.4 KitKat to, you guessed it, count the number of steps whomever is holding the device running your app takes.
 
+## Anatomy notification layout:
+
+![notification layout](doc/anatomy.jpg)
+
 ## Using
 Create a new Cordova Project
 
@@ -10,7 +14,7 @@ Create a new Cordova Project
 Install the plugin
 
     $ cd hello
-    $ cordova plugin add https://github.com/texh/cordova-plugin-stepcounter.git
+    $ cordova plugin add https://github.com/DigitalsunrayMedia/cordova-plugin-stepcounter.git
     
 
 Edit `www/js/index.html` and add the following code inside `onDeviceReady`
@@ -65,13 +69,8 @@ Install Android platform
     
 Run the code
 
-    cordova run
+    cordova ru
     
-## Known Issues
-
- - The service auto-start on device BOOT, even if START command has never been called
- - The service won't really stop even if STOP command is called (will auto-restart)
- - The master count (getStepCount) should return the nb steps since START command has been sent, Todat : if service is killed it might restart to 0. 
     
 ## Changes in 0.0.4
 
@@ -107,9 +106,3 @@ If you'd like to help, I'd love to hear from you!
 
 For more information on setting up Cordova see [the documentation](http://cordova.apache.org/docs/en/4.0.0/guide_cli_index.md.html#The%20Command-Line%20Interface)
 For more info on plugins see the [Plugin Development Guide](http://cordova.apache.org/docs/en/4.0.0/guide_hybrid_plugins_index.md.html#Plugin%20Development%20Guide)
-
-## Todo / Work in progress
-
-It should be interesting to merge this plugin with an ios compatible plugin such as [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer).
-We should look into changing the interface of this plugin for v0.1.0 release to match that of [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer) as closely as possible so as to be able to work towards this in the future.
-We should review the storage way in StepCounterService to use SQLite rather than SharedPreferences, so the custom queries will be possible
