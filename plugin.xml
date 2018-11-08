@@ -33,8 +33,7 @@
 
     <config-file target="AndroidManifest.xml" parent="/manifest">
       <uses-feature android:name="android.hardware.sensor.stepcounter" />
-      <uses-feature android:name="android.hardware.sensor.stepdetector" />
-        <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+      <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     </config-file>
 
     <config-file target="res/xml/config.xml" parent="/*">
@@ -46,6 +45,10 @@
     <source-file src="src/android/net/texh/cordovapluginstepcounter/CordovaStepCounter.java" target-dir="src/net/texh/cordovapluginstepcounter/"/>
     <source-file src="src/android/net/texh/cordovapluginstepcounter/StepCounterService.java" target-dir="src/net/texh/cordovapluginstepcounter/"/>
     <source-file src="src/android/net/texh/cordovapluginstepcounter/StepCounterBootReceiver.java" target-dir="src/net/texh/cordovapluginstepcounter/"/>
+    <source-file src="src/android/res/layout/sticky_notification.xml" target-dir="res/layout"/>
+    <source-file src="src/android/res/drawable-hdpi/notification_icon.png" target-dir="res/drawable"/>
+    <source-file src="src/android/res/drawable-hdpi/notification_image.png" target-dir="res/drawable"/>
+    
   </platform>
 
 </plugin>
