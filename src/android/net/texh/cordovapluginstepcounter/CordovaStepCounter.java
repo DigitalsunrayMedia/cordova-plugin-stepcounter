@@ -139,12 +139,7 @@ public class CordovaStepCounter extends CordovaPlugin {
     }
 
     private static boolean deviceHasStepCounter(PackageManager pm) {
-        // Require at least Android KitKat
-        int currentApiVersion = Build.VERSION.SDK_INT;
-
         // Check that the device supports the step counter and detector sensors
-        return currentApiVersion >= 19
-                && pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER)
-                && pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR);
+        return Build.VERSION.SDK_INT >= 19 && pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER);
     }
 }
