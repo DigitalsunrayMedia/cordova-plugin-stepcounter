@@ -73,7 +73,7 @@ Run the code
     
     
 ## Changes in 0.0.10
- - Replaced: Started background service with a foreground service (In order to tackle the Android 8.0 + background execution limits)
+ - Replaced: Legacy background service with a foreground service (In order to tackle the Android 8.0 + background execution limits)
 
 ## Changes in 0.0.4
 
