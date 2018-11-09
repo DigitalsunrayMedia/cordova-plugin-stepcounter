@@ -41,7 +41,7 @@ Edit `www/js/index.html` and add the following code inside `onDeviceReady`
     // Get the amount of steps for today (or -1 if it no data given)
     stepcounter.getTodayStepCount(success, failure);
     
-    // Get the amount of steps since the service is started (it is actually reseted to 0 when the service is killed by the system)
+    // Get the amount of steps since the service is started!
     stepcounter.getStepCount(success, failure);
 
     // Returns true/false if Android device is running >API level 19 && has the step counter API available
