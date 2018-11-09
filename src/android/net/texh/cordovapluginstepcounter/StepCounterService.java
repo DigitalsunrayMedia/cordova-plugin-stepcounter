@@ -162,8 +162,7 @@ public class StepCounterService extends Service implements StepChangeListener {
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         if (manager != null)
             manager.set(AlarmManager.RTC, System.currentTimeMillis() + 1000,
-                        PendingIntent.getService(   this,11,
-                                                    newServiceIntent,0));
+                        PendingIntent.getService(this, 11, newServiceIntent, 0));
 
         return super.stopService(intent);
     }
