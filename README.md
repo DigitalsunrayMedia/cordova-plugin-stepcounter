@@ -69,7 +69,7 @@ Install Android platform
     
 Run the code
 
-    cordova ru
+    cordova run
     
     
 ## Changes in 0.0.4
