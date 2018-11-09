@@ -43,7 +43,7 @@
     </config-file>
 
     <!-- Dependencies & external libraries -->
-    <dependency id="com.android.support:appcompat-v7" version="27.0.1"/>
+    <framework src="com.android.support:appcompat-v7:27.0.1" />
 
     <source-file src="src/android/net/texh/cordovapluginstepcounter/CordovaStepCounter.java" target-dir="src/net/texh/cordovapluginstepcounter/"/>
     <source-file src="src/android/net/texh/cordovapluginstepcounter/StepCounterService.java" target-dir="src/net/texh/cordovapluginstepcounter/"/>
