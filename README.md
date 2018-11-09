@@ -2,7 +2,7 @@
 
 Uses the step counter service APIs introduced in Android 4.4 KitKat to, you guessed it, count the number of steps whomever is holding the device running your app takes.
 
-## Anatomy notification layout:
+## Anatomy of notification layout:
 
 ![notification layout](doc/anatomy.jpg)
 
