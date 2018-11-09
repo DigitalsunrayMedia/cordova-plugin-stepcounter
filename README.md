@@ -72,23 +72,28 @@ Run the code
     cordova run
     
     
+## Changes in 0.0.10
+ - Replaced: Started background service with a foreground service (In order to tackle the Android 8.0 + background execution limits)
+
 ## Changes in 0.0.4
 
-Added : Re-integrated support for getStepCount which return the step counted since app is started
-Added : Method getTodayStepsCount for an agregated steps count for all a day (uses offset and history to calculate)
-Fixed : Issue with phone rebooting in a middle of a day (causes negative steps for the day, due to step < offset) 
+ - Added : Re-integrated support for getStepCount which return the step counted since app is started
+ - Added : Method getTodayStepsCount for an agregated steps count for all a day (uses offset and history to calculate)
+ - Fixed : Issue with phone rebooting in a middle of a day (causes negative steps for the day, due to step < offset) 
 
 ## Changes in 0.0.3
 
-getHistory() and getStepCount() return parsed JSON objects.
+ - getHistory() and getStepCount() return parsed JSON objects.
 
 ## Changes in 0.0.2
 
-The StepCounterService is now automatically relaunched when killed (and after one hour for some 4.4.2 START_STICKY Service problem).
-The StepCounterService should be automatically launched on device boot (using StepCounterBootReceiver)
+ - The StepCounterService is now automatically relaunched when killed (and after one hour for some 4.4.2 START_STICKY Service problem).
+ - The StepCounterService should be automatically launched on device boot (using StepCounterBootReceiver)
 
 All the step counter data are saved in the "UserData" SharedPrefs, with the "pedometerData" key so we keep the step counting history JSON formatted ("day": {"offset": XXX,"steps": YYY}
 A new js function (for cordova) called getHistory() has been added to access the JSON formatted data containing step count history
+
+
 
 ## Compatibility
 
