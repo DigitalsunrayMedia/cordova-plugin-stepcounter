@@ -18,7 +18,7 @@ class StepCounterHelper {
 
     //region Constants
 
-    private static final int STEPS_DELTA_THRESHOLD = 25;
+    private static final int STEPS_DELTA_THRESHOLD = 50;
 
     private static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
     private static final String PREFERENCE_NAME = "UserData";
