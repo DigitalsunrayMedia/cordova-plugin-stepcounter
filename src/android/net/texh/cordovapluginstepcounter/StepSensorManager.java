@@ -46,7 +46,7 @@ public class StepSensorManager implements SensorEventListener {
                 isStarted = true;
             }
             else
-                Log.i(TAG, "Coud not register STEP_DETECTOR sensor!");
+                Log.i(TAG, "Could not register TYPE_STEP_COUNTER sensor!");
         }
         catch (Throwable throwable) {
             throwable.printStackTrace();

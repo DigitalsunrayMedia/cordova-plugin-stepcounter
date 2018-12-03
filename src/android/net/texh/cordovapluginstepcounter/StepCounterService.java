@@ -67,9 +67,16 @@ public class StepCounterService extends Service implements StepChangeListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "StepCounterService: onStartCommand is called!");
+        return Service.START_STICKY;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.i(TAG, "StepCounterService: onCreate() is called!");
 
         if (isRunning /* || has no step sensors */)
-            return Service.START_STICKY;
+            return;
 
         Log.i(TAG, "StepCounterService: Relaunch service in 1 hour (4.4.2 start_sticky bug ) ...");
 
@@ -88,7 +95,6 @@ public class StepCounterService extends Service implements StepChangeListener {
         doInit();
 
         isRunning = true;
-        return Service.START_STICKY;
     }
 
     public void doInit() {
@@ -123,12 +129,6 @@ public class StepCounterService extends Service implements StepChangeListener {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.i(TAG, "StepCounterService: onCreate() is called!");
     }
 
     @Override

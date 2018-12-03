@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 public class StepCounterBootReceiver extends BroadcastReceiver {
@@ -15,10 +15,7 @@ public class StepCounterBootReceiver extends BroadcastReceiver {
         try {
             //Start the step counter service...
             Intent stepCounterIntent = new Intent(context, StepCounterService.class);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                context.startForegroundService(stepCounterIntent);
-            else
-                context.startService(stepCounterIntent);
+            ContextCompat.startForegroundService(context, stepCounterIntent);
 
         } catch (Exception e){
             Log.e("StepCounterService", "StepCounterBootReceiver: Cannot start step counter service.");

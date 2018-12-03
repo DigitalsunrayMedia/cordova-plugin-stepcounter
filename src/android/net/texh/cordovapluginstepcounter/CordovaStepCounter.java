@@ -31,6 +31,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.text.SimpleDateFormat;
@@ -69,10 +70,7 @@ public class CordovaStepCounter extends CordovaPlugin {
             }
 
             Log.i(TAG, "Starting StepCounterService ...");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                activity.startForegroundService(stepCounterIntent);
-            else
-                activity.startService(stepCounterIntent);
+            ContextCompat.startForegroundService(activity, stepCounterIntent);
         }
         else if (ACTION_STOP.equals(action)) {
             Log.i(TAG, "Stopping StepCounterService");
