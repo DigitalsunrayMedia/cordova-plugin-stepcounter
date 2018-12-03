@@ -18,7 +18,7 @@
   <platform name="android">
 
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
-        <service android:name="net.texh.cordovapluginstepcounter.StepCounterService" android:enabled="true" />
+        <service android:name="net.texh.cordovapluginstepcounter.StepCounterService" android:enabled="true" android:process=":cordovapluginstepcounter" />
 
         <!--
              * This class is triggered upon reboot of the device. It needs to re-register
