@@ -97,6 +97,9 @@ class StepCounterHelper {
             //Calculate the today's step ....
             daySteps = steps - dayOffset + dayBuffer;
 
+            if(daySteps <= 0)
+                return oldDaySteps; //Something went wrong, don't save false values!
+
             //Calculate the total steps...
             int stepsCounted = getTotalCount(context);
             stepsCounted += (daySteps - oldDaySteps);
