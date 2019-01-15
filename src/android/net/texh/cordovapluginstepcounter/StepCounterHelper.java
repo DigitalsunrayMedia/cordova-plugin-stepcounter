@@ -181,7 +181,7 @@ class StepCounterHelper {
                     JSONObject dayData = data.getJSONObject(currentDateString);
                     int steps = dayData.getInt(PEDOMETER_DATA_STEPS);
 
-                    if(steps > 0) {
+                    if(steps >= 0) {
                         //Save calculated values to the private preferences ...
                         dayData.put(PEDOMETER_DATA_STEPS, steps);
                         dayData.put(PEDOMETER_DATA_OFFSET, 0);
