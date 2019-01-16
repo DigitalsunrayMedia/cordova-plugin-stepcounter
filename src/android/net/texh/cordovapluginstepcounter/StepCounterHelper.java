@@ -18,8 +18,6 @@ class StepCounterHelper {
 
     //region Constants
 
-    private static final int STEPS_DELTA_THRESHOLD = 30;
-
     private static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
     private static final String PREFERENCE_NAME = "UserData";
     private static final String PREF_KEY_PEDOMETER_DATA = "pedometerData";
@@ -65,11 +63,6 @@ class StepCounterHelper {
 
                 //Data validation/correction and normalization...
                 int delta = (steps - dayOffset + dayBuffer) - oldDaySteps;
-                if(delta > STEPS_DELTA_THRESHOLD) {
-                    //We didn't set the offset correctly, let's add some buffer!
-                    dayOffset += (delta - 1);
-                }
-                else
                 if(delta < 0) {
                     //We didn't save day's buffer properly!
                     dayBuffer += (Math.abs(delta) + 1);
