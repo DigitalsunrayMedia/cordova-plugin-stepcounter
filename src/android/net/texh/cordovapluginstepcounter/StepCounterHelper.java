@@ -140,7 +140,7 @@ class StepCounterHelper {
     }
 
     static int getTotalCount(@NonNull Context context){
-        Integer totalCount = 0;
+        int totalCount = 0;
         SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCE_NAME,
                                                                     Context.MODE_PRIVATE);
         if(sharedPref.contains("PEDOMETER_TOTAL_COUNT_PREF"))

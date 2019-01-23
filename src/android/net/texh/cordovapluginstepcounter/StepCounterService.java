@@ -155,13 +155,13 @@ public class StepCounterService extends Service implements StepChangeListener {
 
         isRunning = false;
 
-        Log.i(TAG, "StepCounterService: Relaunch service in 1000ms ..." );
+        Log.i(TAG, "StepCounterService: Relaunch service in 10000ms ..." );
 
         //Auto-Relaunch the service....
         Intent newServiceIntent = new Intent(this,StepCounterService.class);
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        if (manager != null)
-            manager.set(AlarmManager.RTC, System.currentTimeMillis() + 1000,
+        if (manager != null)//Restart the service after around Ten seconds!
+            manager.set(AlarmManager.RTC, System.currentTimeMillis() + 10000,
                         PendingIntent.getService(this, 11, newServiceIntent, 0));
 
         return super.stopService(intent);
