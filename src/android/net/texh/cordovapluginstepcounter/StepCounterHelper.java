@@ -41,8 +41,9 @@ class StepCounterHelper {
             SimpleDateFormat dateFormatter = new SimpleDateFormat(DEFAULT_DATE_PATTERN , Locale.getDefault());
 
             String currentDateString = dateFormatter.format(currentDate);
-            SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCE_NAME,
-                                                                        Context.MODE_PRIVATE);
+            SharedPreferences sharedPref = CordovaStepCounter.getDefaultSharedPreferencesMultiProcess(context,
+                                                                                                    PREFERENCE_NAME);
+
             SharedPreferences.Editor editor = sharedPref.edit();
 
             JSONObject pData = new JSONObject();
@@ -121,7 +122,8 @@ class StepCounterHelper {
         SimpleDateFormat dateFormatter = new SimpleDateFormat(DEFAULT_DATE_PATTERN, Locale.getDefault());
 
         String currentDateString = dateFormatter.format(currentDate);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = CordovaStepCounter.getDefaultSharedPreferencesMultiProcess(context,
+                                                                                                PREFERENCE_NAME);
 
         if(sharedPref.contains(PREF_KEY_PEDOMETER_DATA)){
             String pDataString = sharedPref.getString(PREF_KEY_PEDOMETER_DATA,"{}");
@@ -141,8 +143,9 @@ class StepCounterHelper {
 
     static int getTotalCount(@NonNull Context context){
         int totalCount = 0;
-        SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCE_NAME,
-                                                                    Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = CordovaStepCounter.getDefaultSharedPreferencesMultiProcess(context,
+                                                                                                PREFERENCE_NAME);
+
         if(sharedPref.contains("PEDOMETER_TOTAL_COUNT_PREF"))
             totalCount = sharedPref.getInt("PEDOMETER_TOTAL_COUNT_PREF", 0);
 
@@ -150,8 +153,9 @@ class StepCounterHelper {
     }
 
     private static void setTotalCount(@NonNull Context context, Integer newValue){
-        SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCE_NAME,
-                                                                    Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = CordovaStepCounter.getDefaultSharedPreferencesMultiProcess(context,
+                                                                                                PREFERENCE_NAME);
+
         SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
         sharedPrefEditor.putInt("PEDOMETER_TOTAL_COUNT_PREF", newValue);
         sharedPrefEditor.apply();
@@ -164,8 +168,9 @@ class StepCounterHelper {
             SimpleDateFormat dateFormatter = new SimpleDateFormat(DEFAULT_DATE_PATTERN, Locale.getDefault());
 
             String currentDateString = dateFormatter.format(currentDate);
-            SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCE_NAME,
-                                                                        Context.MODE_PRIVATE);
+            SharedPreferences sharedPref = CordovaStepCounter.getDefaultSharedPreferencesMultiProcess(context,
+                                                                                                    PREFERENCE_NAME);
+
             SharedPreferences.Editor editor = sharedPref.edit();
 
             if(sharedPref.contains(PREF_KEY_PEDOMETER_DATA)){

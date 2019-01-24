@@ -31,6 +31,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -84,7 +85,7 @@ public class CordovaStepCounter extends CordovaPlugin {
             callbackContext.success(steps);
         }
         else if (ACTION_GET_TODAY_STEPS.equals(action)) {
-            SharedPreferences sharedPref = activity.getSharedPreferences("UserData", Context.MODE_PRIVATE);
+            SharedPreferences sharedPref = getDefaultSharedPreferencesMultiProcess(activity,"UserData");
             if(sharedPref.contains("pedometerData")){
                 String pDataString = sharedPref.getString("pedometerData", "{}");
 
@@ -118,7 +119,7 @@ public class CordovaStepCounter extends CordovaPlugin {
                 callbackContext.success(-1);
             }
         } else if(ACTION_GET_HISTORY.equals(action)){
-            SharedPreferences sharedPref = activity.getSharedPreferences("UserData", Context.MODE_PRIVATE);
+            SharedPreferences sharedPref = getDefaultSharedPreferencesMultiProcess(activity,"UserData");
             if(sharedPref.contains("pedometerData")){
                 String pDataString = sharedPref.getString("pedometerData","{}");
                 Log.i(TAG, "Getting steps history from stepCounterService: " + pDataString);
@@ -139,5 +140,13 @@ public class CordovaStepCounter extends CordovaPlugin {
     private static boolean deviceHasStepCounter(PackageManager pm) {
         // Check that the device supports the step counter and detector sensors
         return Build.VERSION.SDK_INT >= 19 && pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER);
+    }
+
+    static SharedPreferences getDefaultSharedPreferencesMultiProcess(   @NonNull Context context,
+                                                                        @NonNull String key) {
+        //NOTE: We need to set MODE_MULTI_PROCESS when accessing the SharedPreferences both in the
+        // StepCounter sensor and in the UI process. Because we have specified the service to run
+        // in its own process in the AndroidManifest.xml.
+        return context.getSharedPreferences(key, Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
     }
 }
