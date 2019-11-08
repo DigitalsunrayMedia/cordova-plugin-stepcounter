@@ -1,6 +1,6 @@
 {
   "name": "net.texh.cordovapluginstepcounter",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "cordova": {
     "id": "net-texh-cordovapluginstepcounter",
     "platforms": [

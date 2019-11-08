@@ -70,7 +70,9 @@ Install Android platform
 Run the code
 
     cordova run
-    
+
+## Changes in 0.0.11
+- Added: FOREGROUND_SERVICE permission for API level 28+     
     
 ## Changes in 0.0.10
  - Replaced: Legacy background service with a foreground service (In order to tackle the Android 8.0 + background execution limits)
